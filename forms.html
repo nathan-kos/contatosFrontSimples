@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Document</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    </head>
+    <body class="d-flex flex-column justify-content-center align-items-center" style="height: 100vh; width: 100vw;"> 
+        <div class="w-75 card d-flex flex-column justify-content-center align-items-center" style="padding: 2rem;">  
+            <h1 id="title">Contatos</h1>
+            <form id="edit-form" class="d-flex flex-column justify-content-center align-items-center w-100">
+                <div class="form-group d-flex flex-column w-75">
+                    <label for="name">Nome</label>
+                    <input type="text" id="name" name="name" placeholder="Nome" class="form-control">
+
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" placeholder="Email" class="form-control">
+
+                    <label for="phone">Telefone</label>
+                    <input type="tel" id="phone" name="phone" placeholder="Telefone" class="form-control">
+                </div>
+
+                <button type="submit" class="btn btn-primary w-25">Salvar</button>
+            </form>
+        </div>
+    </body>
+</html>
+
+<script>
+    // Faz a requisição à API quando a página carrega
+    window.onload = function () {
+
+        // Pega o ID do contato da URL
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // Verifica se o ID foi passado
+        if (urlParams.has('id')) {
+            const id = urlParams.get('id');
+            // muda o título do formulário
+            document.querySelector('#title').innerText = 'Editar Contato';
+            // muda o titulo da pagina
+            document.title = 'Editar Contato';
+            populateForm(id);
+        } else {
+            // muda o título do formulário
+            document.querySelector('#title').innerText = 'Adicionar Contato';
+            // muda o titulo da pagina
+            document.title = 'Adicionar Contato';
+        }
+    };
+
+    // Função para preencher os campos do formulário com os dados do contato
+    function populateForm(id) {
+
+        fetch(`http://127.0.0.1:8000/contacts/${id}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(contact => {
+            // Seleciona os campos do formulário
+            const name = document.querySelector('#name');
+            const email = document.querySelector('#email');
+            const phone = document.querySelector('#phone');
+
+            // Preenche os campos do formulário com os dados do contato
+            name.value = contact.con_name;
+            email.value = contact.con_email;
+            phone.value = contact.con_phone;
+
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+        });
+
+        
+    }
+
+    // Adiciona o evento de submit ao formulário
+    document.querySelector('#edit-form').addEventListener('submit', function (event) {
+        event.preventDefault();
+
+        // Pega os valores dos campos do formulário
+        const name = document.querySelector('#name').value;
+        const email = document.querySelector('#email').value;
+        const phone = document.querySelector('#phone').value;
+
+        // Pega o ID do contato da URL
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        if(urlParams.has('id')) {
+            const id = urlParams.get('id');
+            editContact(id, name, email, phone);
+        } else {
+            createContact(name, email, phone);
+        }
+    });
+
+    // Função para editar um contato
+    function editContact(id, name, email, phone) {
+        
+        const data = {
+            con_name: name,
+            con_email: email,
+            con_phone: phone,
+        };
+
+        fetch(`http://127.0.0.1:8000/contacts/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data),
+        })
+        .then(response => {
+            // Verifica se a resposta foi bem-sucedida
+            if (!response.ok) {
+                // Se não foi, lança um erro com o status da resposta
+                return response.json().then(errorData => {
+                    window.alert("Erro ao editar contato");
+                });
+            }
+            return response.json(); // Converte a resposta em JSON apenas se for bem-sucedida
+        })
+        .then(contact => {
+            console.log('Contato editado:', contact);
+            window.location.href = 'home.html';
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+        });
+    }
+
+    // Função para criar um contato
+    function createContact(name, email, phone) {
+        
+        const data = {
+            con_name: name,
+            con_email: email,
+            con_phone: phone,
+        };
+
+        fetch('http://127.0.0.1:8000/contacts', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        })
+        .then(response => {
+            // Verifica se a resposta foi bem-sucedida
+            if (!response.ok) {
+                // Se não foi, lança um erro com o status da resposta
+                return response.json().then(errorData => {
+                    window.alert("Erro ao criar contato");
+                });
+            }
+            return response.json(); // Converte a resposta em JSON apenas se for bem-sucedida
+        })
+        .then(contact => {
+            console.log('Contato criado:', contact);
+            window.location.href = 'home.html';
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+        });
+    }
+
+</script>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Contatos</title>
+
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://unpkg.com/remixicon@2.5.0/fonts/remixicon.css">
+
+    </head>
+    <body class="d-flex flex-column justify-content-center align-items-center" style="height: 100vh; width: 100vw;"> 
+        <div class="w-75 card d-flex flex-column justify-content-center align-items-center" style="padding: 2rem;"> 
+            <h1 class="">Contatos</h1>
+            <table id="contacts-table" class="table table-borderless table-striped ">
+                <thead class="thead">
+                    <tr>
+                        <th>Nome</th>
+                        <th>Email</th>
+                        <th>Telefone</th>
+                        <th><i class="ri-menu-line"></i></th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+
+            <button onclick="window.location.href = 'forms.html';" class="btn btn-primary">Adicionar contato</button>
+        </div>
+    </body>
+</html>
+
+<script>
+    // Faz a requisição à API quando a página carrega
+    window.onload = function () {
+        fetch('http://127.0.0.1:8000/contacts', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(contacts => {
+            console.log(contacts);  // Verifica os dados no console
+            populateTable(contacts);  // Chama a função para preencher a tabela
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+        });
+    };
+
+    // Função para preencher a tabela com os dados da API
+    function populateTable(contacts) {
+        const tbody = document.querySelector('#contacts-table tbody');  // Seleciona o tbody da tabela
+
+        // Itera sobre os dados e cria as linhas da tabela
+        contacts.forEach(contact => {
+            const tr = document.createElement('tr');
+
+            // Cria células para os dados
+            const tdId = document.createElement('td');
+            tdId.textContent = contact.con_name;  // Supondo que a API retorne 'id'
+            tr.appendChild(tdId);
+
+            const tdName = document.createElement('td');
+            tdName.textContent = contact.con_email;  // Supondo que a API retorne 'name'
+            tr.appendChild(tdName);
+
+            const tdEmail = document.createElement('td');
+            tdEmail.textContent = contact.con_phone;  // Supondo que a API retorne 'email'
+            tr.appendChild(tdEmail);
+
+            // Coluna para ações
+            const tdActions = document.createElement('td');
+
+            // Ícone de editar
+            const editIcon = document.createElement('a'); // Usar um link para redirecionar
+            editIcon.innerHTML = '<i class="ri-pencil-line"></i>'; // Ícone de editar
+            editIcon.className = 'btn btn-primary btn-sm';
+            editIcon.onclick = function () {
+                // Redirecionar para a página de edição
+                window.location.href = `forms.html?id=${contact.con_id}`; // Ajuste o caminho conforme necessário
+            };
+            tdActions.appendChild(editIcon);
+
+            // Ícone de deletar
+            const deleteIcon = document.createElement('a'); // Usar um link para redirecionar
+            deleteIcon.innerHTML = '<i class="ri-delete-bin-line"></i>'; // Ícone de deletar
+            deleteIcon.className = 'btn btn-danger btn-sm';
+            deleteIcon.onclick = function () {
+                // Lógica de deleção aqui
+                if (confirm(`Tem certeza que deseja deletar o contato: ${contact.con_name}?`)) {
+                    deleteContact(contact.con_id); // Chama a função para deletar o contato
+                }
+            };
+            tdActions.appendChild(deleteIcon);
+
+            tr.appendChild(tdActions); // Adiciona as ações à linha
+            tbody.appendChild(tr); // Adiciona a linha ao corpo da tabela
+        });
+    }
+
+    // Função para deletar um contato
+    function deleteContact(id) {
+        fetch(`http://127.0.0.1:8000/contacts/${id}`, {
+            method: 'delete',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(contacts => {
+            window.location.reload();
+        })
+        .catch(error => {
+            window.alert('Erro ao deletar contato');
+        });
+    };
+</script>
